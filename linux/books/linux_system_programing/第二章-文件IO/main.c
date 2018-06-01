@@ -6,10 +6,12 @@
  *
  */
 
+// perror()
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
-// 变量errno
+// errno
 #include <errno.h>
 
 // open()...
@@ -17,46 +19,43 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-// close(), read()
+// close(), read(), write()
 #include <unistd.h>
 
 int main(int argc, char const *argv[]) {
     int fd; // 文件描述符
 
-    /*
-     * int open(const char* pathname, int flags, mode_t mode);
-     *
-     * flags:
-     *  O_RDONLY, O_WRONLY, O_RDWR 这三者必须包含其一
-     *  O_APPEND, O_CREAT... 或者位或一个、多个这些选项
-     *
-     * mode(权限):
-     *  S_IRGRP, S_IWGRP, S_IXOTH...
-     *  可以是数字形式, 如: 0644
-     */
-    fd = open("/home/yangpengda/.bashrc", O_RDONLY);
+    fd = open("./test.txt", O_RDWR | O_APPEND | O_CREAT,
+                0644);
     if (-1 == fd) {
         perror("open");
     }
 
+    const char* str = "yang pengda.";
+    ssize_t wret;
+    wret = write(fd, str, strlen(str));
+    if (-1 == wret) {
+        perror("write");
+    }
+
     size_t len = 100;
     char* buf = (char*) malloc(len);
-    ssize_t ret = 0;
-    while (len != 0 && (ret = read(fd, buf, len)) != 0) {
-        if (-1 == ret) {
+    ssize_t rret = 0;
+    while (len != 0 && (rret = read(fd, buf, len)) != 0) {
+        if (-1 == rret) {
             if (errno == EINTR) {
                 continue;
             }
             perror("read");
             break;
         }
-        len -= ret;
-        if (ret > 0 && ret < len) {
-            buf += ret;
+        len -= rret;
+        if (rret > 0 && rret < len) {
+            buf += rret;
         }
 
     }
-    free(buf);
+    //free(buf);
 
     close(fd);
 
